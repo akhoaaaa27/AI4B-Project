@@ -1,0 +1,3 @@
+# Complete development environment: backend, tests, browser checks and ML.
+-r requirements-dev.txt
+-r requirements-ml.txt

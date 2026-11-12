@@ -1,0 +1,4 @@
+# Backend versions validated in this workspace (Python 3.14).
+fastapi==0.162.2
+uvicorn[standard]==0.54.0
+python-dotenv==1.2.4
