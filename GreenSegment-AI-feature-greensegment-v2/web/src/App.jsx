@@ -1,22 +1,45 @@
-import React, { useEffect, useState } from 'react';
-import { Menu } from 'lucide-react';
+import React, { useEffect, useRef, useState } from 'react';
 import { apiGet } from './api.js';
-import Sidebar from './components/Sidebar.jsx';
+import GlobalHeader from './components/GlobalHeader.jsx';
+import Home from './pages/Home.jsx';
+import { navigate, readRoute } from './navigation.js';
 import Overview from './pages/Overview.jsx';
 import CityExplorer from './pages/CityExplorer.jsx';
 import GreenAdvisor from './pages/GreenAdvisor.jsx';
 import About from './pages/About.jsx';
 import MarketExplorer from './pages/MarketExplorer.jsx';
+import VideoBackground from './components/VideoBackground.jsx';
 
 const INITIAL_FILTERS = { country: '', cluster_id: '', sector: '' };
 
 export default function App() {
-  const [page, setPage] = useState('overview');
+  const [route, setRoute] = useState(readRoute);
+  const page = route.page;
+  const previousPage = useRef(page);
   // Map scope and the last detailed profile travel together, including across page navigation.
   const [overview, setOverview] = useState({ filters: INITIAL_FILTERS, analysisClusterId: 0, mapResetVersion: 0 });
   const [countries, setCountries] = useState([]);
-  const [selectedCityId, setSelectedCityId] = useState(null);
-  const [mobileOpen, setMobileOpen] = useState(false);
+  const [lastCityId, setLastCityId] = useState(route.cityId);
+  const selectedCityId = route.cityId ?? lastCityId;
+
+  useEffect(() => {
+    const update = () => setRoute(readRoute());
+    window.addEventListener('hashchange', update);
+    return () => window.removeEventListener('hashchange', update);
+  }, []);
+
+  useEffect(() => { if (route.cityId) setLastCityId(route.cityId); }, [route.cityId]);
+
+  useEffect(() => {
+    const titles = { home: 'Trang chủ', overview: 'Tổng quan', city: 'Tra cứu đô thị', market: 'Khám phá thị trường', about: 'Giới thiệu', advisor: 'Gemini Advisor' };
+    document.title = `${titles[page]} | GreenSegment AI`;
+    if (previousPage.current !== page) {
+      window.scrollTo({ top: 0, behavior: 'instant' });
+      const heading = document.querySelector('#main-content h1');
+      if (heading) { heading.tabIndex = -1; heading.focus({ preventScroll: true }); }
+    }
+    previousPage.current = page;
+  }, [page]);
 
   useEffect(() => {
     apiGet('/countries').then(setCountries).catch(() => {});
@@ -30,22 +53,22 @@ export default function App() {
       analysisClusterId: key === 'cluster_id' && value !== '' ? Number(value) : prev.analysisClusterId,
     };
   });
-  const onSelectCityFromMap = (cityId) => { setSelectedCityId(String(cityId)); setPage('city'); window.scrollTo({ top: 0, behavior: 'smooth' }); };
+  const onSelectCityFromMap = (cityId) => navigate('city', String(cityId));
 
   return <div className="app-shell">
-    <Sidebar page={page} onPage={setPage} mobileOpen={mobileOpen} setMobileOpen={setMobileOpen}/>
+    <VideoBackground/>
+    <GlobalHeader page={page} selectedCityId={selectedCityId}/>
     <div className="main-shell">
-      <div className="mobile-topbar"><button aria-label="Mở điều hướng" onClick={() => setMobileOpen(true)}><Menu size={22}/></button>
-        <strong>GreenSegment AI</strong><span>2024</span></div>
-      <div className="main-inner">
+      <main id="main-content" className={`main-inner${page === 'home' ? ' home-container' : ''}`} tabIndex={-1}>
+        {page === 'home' && <Home selectedCityId={selectedCityId}/>}
         {page === 'overview' && <Overview filters={overview.filters} analysisClusterId={overview.analysisClusterId}
           mapResetVersion={overview.mapResetVersion} onFilter={onFilter} countries={countries} onSelectCity={onSelectCityFromMap}/>}
         {page === 'market' && <MarketExplorer countries={countries} onSelectCity={onSelectCityFromMap}/>}
         {page === 'city' && <CityExplorer selectedCityId={selectedCityId}
-          onSelectCity={(id) => setSelectedCityId(String(id))} onGoAdvisor={() => { setPage('advisor'); window.scrollTo(0, 0); }}/>} 
-        {page === 'advisor' && <GreenAdvisor selectedCityId={selectedCityId} onSelectCity={(id) => setSelectedCityId(String(id))}/>}
+          onSelectCity={(id) => navigate('city', String(id))} onGoAdvisor={() => navigate('advisor', selectedCityId)}/>}
+        {page === 'advisor' && <GreenAdvisor selectedCityId={selectedCityId} onSelectCity={(id) => navigate('advisor', String(id))}/>}
         {page === 'about' && <About/>}
-      </div>
+      </main>
     </div>
   </div>;
 }

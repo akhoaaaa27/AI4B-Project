@@ -21,7 +21,6 @@ export default function DataFilters({ filters, onFilter, countries, inline = fal
           <option value="1">Cụm 1 – Công nghiệp</option>
           <option value="2">Cụm 2 – Năng lượng</option>
         </select>
-        {clusterHelp}
       </div>
       <div>
         <label className="field-label" htmlFor="sector-filter"><Leaf size={16}/> Lĩnh vực chiếm tỷ trọng cao nhất</label>
@@ -31,6 +30,9 @@ export default function DataFilters({ filters, onFilter, countries, inline = fal
         </select>
       </div>
     </div>
-    <button className="filter-reset" onClick={() => onFilter('reset')} type="button">Đặt lại bộ lọc</button>
+    <div className="filters-footer">
+      {clusterHelp}
+      <button className="filter-reset" onClick={() => onFilter('reset')} type="button">Đặt lại bộ lọc</button>
+    </div>
   </section>;
 }

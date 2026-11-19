@@ -12,7 +12,7 @@ export function ClusterStackedChart({ clusters, filtered = false, basis = 'mean'
     const row = rows.find((r) => r.cluster === payload.value);
     const active = row.cluster_id === selectedClusterId;
     return <text x={x - 8} y={y} dy={4} textAnchor="end" fontSize={12} className="ce-chart-tick"
-      fill={active ? CLUSTER_COLORS[row.cluster_id] : '#34575c'} fontWeight={active ? 800 : 500}
+      fill={active ? `color-mix(in srgb, ${CLUSTER_COLORS[row.cluster_id]} 65%, white)` : 'var(--text-secondary)'} fontWeight={active ? 800 : 500}
       role="button" tabIndex={0} aria-label={`Chọn ${row.cluster}`} aria-pressed={active}
       onClick={() => onSelectCluster(row.cluster_id)} onKeyDown={(e) => {
         if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onSelectCluster(row.cluster_id); }
@@ -21,16 +21,16 @@ export function ClusterStackedChart({ clusters, filtered = false, basis = 'mean'
   return <div className="chart-wrap stacked-chart">
     <div className="stacked-plot"><ResponsiveContainer width="100%" height="100%">
       <BarChart data={rows} layout="vertical" margin={{ top: 8, right: 12, bottom: 2, left: 8 }} barCategoryGap="24%">
-        <CartesianGrid strokeDasharray="3 6" horizontal={false} stroke="#edf1f2" />
-        <XAxis type="number" domain={[0, 100]} tickFormatter={(v) => pct(v, 0)} tick={{ fontSize: 11, fill: '#72838a' }} />
-        <YAxis dataKey="cluster" type="category" tick={onSelectCluster ? clusterTick : { fontSize: 12, fill: '#34575c' }} width={65} axisLine={false} tickLine={false} />
+        <CartesianGrid strokeDasharray="3 6" horizontal={false} stroke="var(--chart-grid)" />
+        <XAxis type="number" domain={[0, 100]} tickFormatter={(v) => pct(v, 0)} tick={{ fontSize: 11, fill: 'var(--text-secondary)' }} />
+        <YAxis dataKey="cluster" type="category" tick={onSelectCluster ? clusterTick : { fontSize: 12, fill: 'var(--text-secondary)' }} width={65} axisLine={false} tickLine={false} />
         <Tooltip formatter={(v, name) => [pct(v, 2), SECTOR_LABELS[name] || name]} />
         {SECTORS.map((s, i) => <Bar key={s} dataKey={s} name={SECTOR_LABELS[s]} stackId="sectors" fill={SECTOR_COLORS[s]}
           radius={i === SECTORS.length - 1 ? [0, 5, 5, 0] : undefined} maxBarSize={34}>
           {rows.map((row) => <Cell key={row.cluster_id} onClick={onSelectCluster ? () => onSelectCluster(row.cluster_id) : undefined}
             cursor={onSelectCluster ? 'pointer' : undefined}
             fillOpacity={selectedClusterId == null || row.cluster_id === selectedClusterId ? 1 : 0.4}
-            stroke={row.cluster_id === selectedClusterId ? '#19363b' : undefined}
+            stroke={row.cluster_id === selectedClusterId ? 'var(--text-primary)' : undefined}
             strokeWidth={row.cluster_id === selectedClusterId ? 1 : 0}/>)}
         </Bar>) }
       </BarChart>
@@ -39,20 +39,22 @@ export function ClusterStackedChart({ clusters, filtered = false, basis = 'mean'
   </div>;
 }
 
-export function CitySectorChart({ shares, clusterMeans, clusterCentroid }) {
+export function CitySectorChart({ shares, clusterMeans, clusterCentroid, clusterId }) {
   const reference = clusterCentroid ?? clusterMeans;
   const referenceLabel = clusterCentroid ? 'Tâm K-Means' : 'Trung bình cụm';
+  const cityColor = CLUSTER_COLORS[clusterId] ?? 'var(--accent)';
+  const referenceColor = { 0: '#A8D8FF', 1: '#FFE0A7', 2: '#A2F5D9' }[clusterId] ?? 'var(--chart-reference)';
   const rows = SECTORS.map((s) => ({ name: SECTOR_LABELS[s], city: shares?.[s] || 0, cluster: reference?.[s] || 0 }));
   return <div className="chart-wrap city-sector-chart">
     <ResponsiveContainer width="100%" height="100%">
       <BarChart data={rows} layout="vertical" margin={{ top: 8, right: 25, bottom: 6, left: 10 }}>
-        <CartesianGrid stroke="#edf1f2" horizontal={false} strokeDasharray="3 5"/>
+        <CartesianGrid stroke="var(--chart-grid)" horizontal={false} strokeDasharray="3 5"/>
         <XAxis type="number" tickFormatter={(n) => pct(n, 0)} domain={[0, 100]} tick={{ fontSize: 11 }} />
-        <YAxis type="category" dataKey="name" width={85} tick={{ fontSize: 11, fill: '#426168' }} axisLine={false} tickLine={false}/>
+        <YAxis type="category" dataKey="name" width={85} tick={{ fontSize: 11, fill: 'var(--text-secondary)' }} axisLine={false} tickLine={false}/>
         <Tooltip formatter={(v, n) => [pct(v, 2), n === 'city' ? 'Đô thị' : referenceLabel]} />
         <Legend formatter={(name) => name === 'city' ? 'Đô thị' : referenceLabel} verticalAlign="top" height={28} />
-        <Bar dataKey="city" fill="#087f68" maxBarSize={15} radius={[0, 4, 4, 0]}/>
-        <Bar dataKey="cluster" fill="#b9dcd0" maxBarSize={15} radius={[0, 4, 4, 0]}/>
+        <Bar dataKey="city" fill={cityColor} maxBarSize={15} radius={[0, 4, 4, 0]}/>
+        <Bar dataKey="cluster" fill={referenceColor} maxBarSize={15} radius={[0, 4, 4, 0]}/>
       </BarChart>
     </ResponsiveContainer>
   </div>;

@@ -21,7 +21,7 @@ from playwright.sync_api import expect, sync_playwright
 from api import advisor_service as advisor, data_service as data
 from api.main import app
 
-OVERVIEW_MARKER_COLORS = {0: "#2563eb", 1: "#d97706", 2: "#047857"}
+OVERVIEW_MARKER_COLORS = {0: "#50AEFF", 1: "#FFBE61", 2: "#39DEAA"}
 
 CAPTURE_LEAFLET = """(() => {
   window.__leafletMaps = [];
@@ -67,7 +67,8 @@ class OverviewBrowserTests(unittest.TestCase):
         self.map_error = False
         self.page.route("**/api/**", self.api_route)
         self.page.route("https://*.tile.openstreetmap.org/**", lambda route: route.abort())
-        self.page.goto(os.environ.get("OVERVIEW_UI_URL", "http://127.0.0.1:5173"))
+        self.page.route("https://tiles.stadiamaps.com/**", lambda route: route.abort())
+        self.page.goto(os.environ.get("OVERVIEW_UI_URL", "http://127.0.0.1:5173").rstrip('/') + '/#/overview')
         expect(self.page.locator(".ce-profile-id")).to_have_text("Cụm 0")
         self.wait_data()
 
@@ -118,7 +119,8 @@ class OverviewBrowserTests(unittest.TestCase):
 
     def assert_selection(self, map_id, analysis_id):
         expect(self.page.locator("#cluster-filter")).to_have_value(str(map_id))
-        group = self.page.get_by_role("group", name="Lọc cụm trên bản đồ")
+        was_collapsed = self.page.locator('.map-selector-toggle').get_attribute('aria-expanded') == 'false'
+        group = self.open_selector()
         expect(group.locator('button[aria-pressed="true"]')).to_have_count(1)
         active = group.get_by_role("button", name="Tất cả 3 cụm", exact=True) if map_id == "" else group.get_by_role("button", name=re.compile(f"^Cụm {map_id} –"))
         expect(active).to_have_attribute("aria-pressed", "true")
@@ -126,6 +128,18 @@ class OverviewBrowserTests(unittest.TestCase):
         expect(self.page.get_by_role("button", name=f"Chọn Cụm {analysis_id}", exact=True)).to_have_attribute("aria-pressed", "true")
         expect(self.page.locator('.ce-chart-tick[aria-pressed="true"]')).to_have_count(1)
         expect(self.page.locator(".ce-chart-tick")).to_have_count(3)
+        if was_collapsed:
+            self.page.locator('.map-selector-toggle').click()
+
+    def open_selector(self):
+        toggle = self.page.locator('.map-selector-toggle')
+        if toggle.get_attribute('aria-expanded') == 'false':
+            toggle.click()
+        return self.page.get_by_role('group', name='Lọc cụm trên bản đồ')
+
+    def map_choice(self, cluster):
+        group = self.open_selector()
+        return group.get_by_role('button', name='Tất cả 3 cụm', exact=True) if cluster == '' else group.get_by_role('button', name=re.compile(f'^Cụm {cluster} –'))
 
     def choose_country(self, country):
         self.page.locator("#country-filter").select_option(country)
@@ -156,14 +170,14 @@ class OverviewBrowserTests(unittest.TestCase):
     def test_initial_selection_dropdown_cards_and_chart_stay_synchronized(self):
         self.assert_selection("", 0)
         self.assertEqual(len(self.markers()), 5000)
-        expect(self.page.locator(".overview-map-caption")).to_contain_text("lấy mẫu tối đa 5.000")
+        expect(self.page.locator(".overview-map-caption p").first).to_have_text("Đang hiển thị 5.000/11.422 đô thị.")
         self.assertEqual(self.camera()["zoom"], 2)
         for cluster in range(3):
             self.choose_cluster(cluster)
             self.assert_selection(cluster, cluster)
             colors = {marker["color"] for marker in self.markers()}
             self.assertEqual(colors, {OVERVIEW_MARKER_COLORS[cluster]})
-        self.page.get_by_role("group", name="Lọc cụm trên bản đồ").get_by_role("button", name=re.compile("^Cụm 1 –")).click()
+        self.map_choice(1).click()
         self.wait_data()
         self.assert_selection(1, 1)
         self.page.get_by_role("button", name="Chọn Cụm 0", exact=True).focus()
@@ -174,7 +188,7 @@ class OverviewBrowserTests(unittest.TestCase):
         self.page.locator(".recharts-bar-rectangle").nth(2).click()
         self.wait_data()
         self.assert_selection(2, 2)
-        self.page.get_by_role("button", name="Tất cả 3 cụm", exact=True).click()
+        self.map_choice('').click()
         self.wait_data()
         self.assert_selection("", 2)
         self.assertEqual({marker["color"] for marker in self.markers()}, set(OVERVIEW_MARKER_COLORS.values()))
@@ -201,9 +215,9 @@ class OverviewBrowserTests(unittest.TestCase):
 
     def test_marker_appearance_zoom_and_canvas_lifecycle(self):
         self.assertEqual({marker["color"] for marker in self.markers()}, set(OVERVIEW_MARKER_COLORS.values()))
-        self.assertTrue(self.page.evaluate("testMarkers().every(marker => marker.options.color === '#ffffff' && marker.options.weight === 1.2 && marker.options.fillOpacity === 1 && marker.getRadius() === 3.5)"))
+        self.assertTrue(self.page.evaluate("testMarkers().every(marker => marker.options.color === '#ffffff' && marker.options.weight === 0.65 && marker.options.fillOpacity === 1 && marker.getRadius() === 3.5)"))
         legend = self.page.locator(".map-legend i").evaluate_all("nodes => nodes.map(node => node.style.backgroundColor)")
-        self.assertEqual(legend, ["rgb(37, 99, 235)", "rgb(217, 119, 6)", "rgb(4, 120, 87)"])
+        self.assertEqual(legend, ["rgb(80, 174, 255)", "rgb(255, 190, 97)", "rgb(57, 222, 170)"])
         timings = self.page.evaluate("""async () => {
           const map = testMap(), markers = testMarkers();
           const elapsed = [];
@@ -238,10 +252,10 @@ class OverviewBrowserTests(unittest.TestCase):
         self.page.mouse.move(position["x"], position["y"])
         expect(self.page.locator(".leaflet-tooltip")).to_contain_text(point["city_name"])
         expect(self.page.locator(".leaflet-tooltip")).to_contain_text("Singapore · Cụm 2")
-        self.assertTrue(self.page.evaluate("testMarkers()[0].getRadius() === 6 && testMarkers()[0].options.weight === 1.8"))
+        self.assertTrue(self.page.evaluate("testMarkers()[0].getRadius() === 6 && testMarkers()[0].options.weight === 1.3"))
         self.page.mouse.move(0, 0)
         expect(self.page.locator(".leaflet-tooltip")).not_to_be_visible()
-        self.assertTrue(self.page.evaluate("testMarkers()[0].getRadius() === 4.5 && testMarkers()[0].options.weight === 1.2"))
+        self.assertTrue(self.page.evaluate("testMarkers()[0].getRadius() === 4.5 && testMarkers()[0].options.weight === 0.65"))
         self.page.mouse.click(position["x"], position["y"])
         expect(self.page.locator(".city-hero h2")).to_have_text(point["city_name"])
         expect(self.page.locator(".city-hero")).to_contain_text(f"Mã đô thị {point['city_id']}")
@@ -255,7 +269,7 @@ class OverviewBrowserTests(unittest.TestCase):
         self.page.on("pageerror", lambda error: self.page_errors.append(str(error)))
         self.page.route("**/api/**", self.api_route)
         self.page.route("https://*.tile.openstreetmap.org/**", lambda route: route.abort())
-        self.page.goto(os.environ.get("OVERVIEW_UI_URL", "http://127.0.0.1:5173"))
+        self.page.goto(os.environ.get("OVERVIEW_UI_URL", "http://127.0.0.1:5173").rstrip('/') + '/#/overview')
         self.wait_data()
         self.choose_country("Singapore")
         self.choose_cluster(2)
@@ -315,16 +329,16 @@ class OverviewBrowserTests(unittest.TestCase):
     def test_navigation_preserves_selection_and_refits_country(self):
         self.choose_country("Japan")
         self.choose_cluster(2)
-        self.page.get_by_role("button", name="Tất cả 3 cụm", exact=True).click()
+        self.map_choice('').click()
         self.wait_data()
-        self.page.get_by_role("button", name="Giới thiệu", exact=True).click()
-        self.page.get_by_role("button", name="Tổng quan", exact=True).click()
+        self.page.get_by_role("navigation", name="Điều hướng chính").get_by_role("link", name="Giới thiệu", exact=True).click()
+        self.page.get_by_role("navigation", name="Điều hướng chính").get_by_role("link", name="Tổng quan", exact=True).click()
         self.wait_data()
         self.assert_selection("", 2)
         self.assert_country_points_visible("Japan")
-        self.page.get_by_role("button", name="Tra cứu đô thị", exact=True).click()
+        self.page.get_by_role("navigation", name="Điều hướng chính").get_by_role("link", name="Tra cứu đô thị", exact=True).click()
         expect(self.page.locator(".city-explorer")).to_be_visible()
-        self.page.get_by_role("button", name="Tổng quan", exact=True).click()
+        self.page.get_by_role("navigation", name="Điều hướng chính").get_by_role("link", name="Tổng quan", exact=True).click()
         self.wait_data()
         self.assert_selection("", 2)
 
@@ -353,12 +367,13 @@ class OverviewBrowserTests(unittest.TestCase):
         self.assert_country_points_visible("Cuba", 1)
 
     def test_responsive_controls_and_map_padding(self):
-        for width in (1440, 768, 390, 320):
+        for width in (1440, 1024, 768, 390, 320):
             self.page.set_viewport_size({"width": width, "height": 1000})
             self.choose_country("Cuba")
             self.assert_country_points_visible("Cuba")
             self.assertTrue(self.page.evaluate("document.documentElement.scrollWidth <= innerWidth"), f"Overflow at {width}px")
-            buttons = self.page.locator(".map-cluster-overlay button")
+            self.open_selector()
+            buttons = self.page.locator(".map-cluster-overlay .ce-selector button")
             expect(buttons).to_have_count(4)
             for button in buttons.all():
                 self.assertGreaterEqual(button.bounding_box()["height"], 44)

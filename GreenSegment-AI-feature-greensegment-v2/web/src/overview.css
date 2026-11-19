@@ -1,0 +1,99 @@
+/* Phase 2B: scope analytical layout refinements to Overview. */
+.main-inner:has(.overview-page) { padding-top: 12px; }
+.overview-page .page-intro { margin-bottom: 18px; }
+.overview-page .page-intro h1 { margin-bottom: 7px; }
+.overview-page .data-filters-inline { padding: 14px 16px 12px; margin-bottom: 16px; }
+.overview-page .data-filters-inline .field-label { margin-bottom: 6px; }
+.overview-page .filters-footer { display: flex; align-items: flex-start; gap: 12px; margin-top: 8px; }
+.overview-page .filters-footer .overview-help { margin: 0; max-width: 80ch; flex: 1; }
+.overview-page .filters-footer summary { display: flex; align-items: center; min-height: 40px; padding: 6px 0; }
+.overview-page .filters-footer summary::before { content: '▸'; margin-right: 7px; }
+.overview-page .filters-footer details[open] summary::before { content: '▾'; }
+.overview-page .filters-footer .filter-reset { margin: 0 0 0 auto; min-height: 40px; flex-shrink: 0; }
+.overview-page .stat-grid { gap: 14px; margin-bottom: 16px; align-items: stretch; grid-auto-rows: 1fr; }
+.overview-page .stat-card { padding: 16px; column-gap: 12px; }
+.overview-page .map-panel { padding: 18px 20px 16px; }
+.overview-page .map-panel > .panel-heading { margin-bottom: 14px; }
+.overview-page .worldmap { height: clamp(460px, 54vh, 560px); }
+.overview-page .map-legend { padding-top: 10px; }
+.overview-page .overview-map-caption { margin-top: 8px; font-size: 11px; line-height: 1.65; }
+.overview-page .overview-map-caption p + p { margin-top: 3px; }
+.overview-page .map-cluster-overlay { width: 200px; max-width: calc(100% - 64px); }
+.overview-page .map-cluster-overlay:has([data-expanded="true"]) { width: 240px; }
+.overview-page .map-selector { padding: 6px; border: 1px solid var(--control-border); border-radius: 12px; background: var(--surface-elevated); box-shadow: var(--shadow); pointer-events: auto; }
+.overview-page .map-selector h3 { margin: 0; font-size: 12px; }
+.overview-page .map-selector-toggle { display: flex; align-items: center; justify-content: space-between; gap: 8px; width: 100%; min-height: 44px; padding: 8px; background: transparent; border: 0; border-radius: 7px; color: var(--text-primary); font-weight: 750; font-size: 12px; text-align: left; }
+.overview-page .map-selector-toggle:hover { background: var(--surface-hover); }
+.overview-page .map-selector-toggle svg { flex-shrink: 0; color: var(--accent); }
+.overview-page .map-selector-summary { margin: 0; padding: 0 8px 6px; font-size: 11px; line-height: 1.5; color: var(--text-secondary); }
+.overview-page .map-selector [hidden] { display: none; }
+.overview-page .map-selector .ce-selector { gap: 6px; margin: 4px 0 0; }
+.overview-page .map-selector .ce-selector button { min-height: 48px; padding: 9px; border-radius: 8px; box-shadow: none; background: var(--surface-inset); }
+.overview-page .map-selector .ce-selector button.selected { padding: 8px; background: var(--surface-selected); }
+.overview-page .map-selector .ce-selector strong { font-size: 11px; line-height: 1.5; white-space: normal; overflow: visible; }
+.overview-page .map-selector .ce-cluster-size { display: block; font-size: 10px; color: var(--text-primary); }
+.overview-page .map-selector .map-selection-check { width: 16px; }
+.overview-page .overview-clusters { margin-top: 24px; }
+.overview-page .ce-section-heading p { margin-bottom: 12px; }
+.overview-page .ce-ai-panel { padding: 18px 20px; }
+.overview-page .ce-ai-panel > .panel-heading { margin-bottom: 12px; }
+.overview-page .ce-ai-action { align-items: center; gap: 20px; }
+.overview-page .ce-ai-copy { min-width: 0; max-width: 84ch; }
+.overview-page .ce-ai-copy p { line-height: 1.7; }
+.overview-page .ce-ai-empty .ce-ai-copy { max-width: none; }
+.overview-page .ce-ai-empty-content { display: flex; flex-direction: column; align-items: center; gap: 14px; padding: 24px 0 8px; text-align: center; }
+.overview-page .ce-ai-document-icon { color: var(--text-secondary); flex-shrink: 0; }
+.overview-page .ce-ai-empty-content .overview-report-empty { margin: 0; color: var(--text-primary); font-size: 13px; line-height: 1.7; }
+.overview-page .ce-ai-empty-content .button { min-height: 44px; max-width: 100%; white-space: normal; }
+.overview-page .ce-ai-action .button { min-height: 44px; flex-shrink: 0; }
+.overview-page .ce-ai-panel .error-box { margin: 14px 0 0; }
+.overview-page .overview-methodology { margin-top: 18px; padding: 18px 20px; color: var(--text-secondary); font-size: 12px; line-height: 1.85; text-shadow: none; }
+.overview-page .overview-methodology > .panel-heading { margin-bottom: 14px; }
+.overview-page .overview-methodology-content { max-width: none; }
+.overview-page .overview-methodology-content > p { margin: 0; }
+.overview-page .overview-methodology-content > p + p { margin-top: 8px; }
+.overview-page .research-cards { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.overview-page .research-card { display: flex; flex-direction: column; align-items: flex-start; gap: 8px; min-width: 0; padding: 16px; border: 1px solid var(--border); border-radius: 12px; background: var(--surface-inset); }
+.overview-page .research-card > svg { color: var(--accent); flex-shrink: 0; }
+.overview-page .research-card p { margin: 0; color: var(--text-secondary); font-size: 12px; line-height: 1.7; }
+.overview-page .research-card .research-label { color: var(--text-muted); font-size: 10px; font-weight: 650; }
+.overview-page .research-card h3 { margin: 0; color: var(--text-primary); font-size: 16px; line-height: 1.45; }
+.overview-page .research-caution { display: flex; align-items: flex-start; gap: 9px; margin-top: 12px; }
+.overview-page .research-caution svg { margin-top: 3px; color: var(--accent); flex-shrink: 0; }
+.overview-page .research-caution p { margin: 0; font-size: 12px; line-height: 1.85; }
+.overview-page .overview-methodology .overview-help { margin-top: 18px; padding-top: 12px; border-top: 1px solid var(--border); }
+.overview-page .overview-methodology summary { min-height: 44px; padding-block: 10px; }
+.overview-page .overview-methodology summary::marker { color: var(--accent); }
+@media(max-width: 1100px) {
+  .overview-page .stat-card { padding: 14px 12px; column-gap: 9px; }
+}
+@media(max-width: 900px) {
+  .overview-page .worldmap { height: 460px; }
+  .overview-page .ce-ai-action { align-items: stretch; flex-direction: column; gap: 12px; }
+  .overview-page .ce-ai-action .button { align-self: flex-start; }
+}
+@media(max-width: 630px) {
+  .main-inner:has(.overview-page) { padding-top: 16px; }
+  .overview-page .data-filters-inline { padding: 14px; }
+  .overview-page .data-filters-inline select { min-height: 44px; }
+  .overview-page .filters-footer { flex-wrap: wrap; gap: 6px 12px; }
+  .overview-page .filters-footer .overview-help { flex-basis: auto; }
+  .overview-page .filters-footer .overview-help[open] { flex-basis: 100%; max-width: none; }
+  .overview-page .filters-footer summary, .overview-page .filters-footer .filter-reset { min-height: 44px; }
+  .overview-page .stat-grid { gap: 10px; }
+  .overview-page .stat-card { padding: 14px 10px; column-gap: 7px; }
+  .overview-page .stat-card span, .overview-page .stat-card small { font-size: 10px; line-height: 1.5; }
+  .overview-page .map-panel { padding: 16px 14px 14px; }
+  .overview-page .worldmap { height: 420px; }
+  .overview-page .map-cluster-overlay:has([data-expanded="true"]) { width: calc(100% - 60px); }
+  .overview-page .map-selector .ce-selector { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .overview-page .map-selector .ce-selector button { padding: 7px; align-items: flex-start; gap: 3px; }
+  .overview-page .map-selector .ce-selector button.selected { padding: 6px; }
+  .overview-page .map-selector .ce-cluster-label { font-size: 11px; }
+  .overview-page .map-selector .ce-selector strong { font-size: 10px; }
+  .overview-page .map-selector .ce-cluster-size { display: block; font-size: 10px; }
+  .overview-page .map-selector .map-selection-check { width: 12px; }
+  .overview-page .ce-ai-panel, .overview-page .overview-methodology { padding: 16px 14px; }
+  .overview-page .ce-ai-action .button { align-self: stretch; white-space: normal; }
+  .overview-page .research-cards { grid-template-columns: 1fr; }
+}

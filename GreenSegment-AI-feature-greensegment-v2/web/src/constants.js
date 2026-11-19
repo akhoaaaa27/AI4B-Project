@@ -7,7 +7,7 @@ export const SECTOR_COLORS = {
   agriculture: '#6bbf63', energy: '#5097e8', industry: '#f4a261', international: '#bb91e6',
   residential: '#e9bf62', transport: '#ef7390', waste: '#adb5c1',
 };
-export const CLUSTER_COLORS = { 0: '#3b82f6', 1: '#f59e0b', 2: '#10b981' };
+export const CLUSTER_COLORS = { 0: '#50AEFF', 1: '#FFBE61', 2: '#39DEAA' };
 export const shortClusterName = { 0: 'Dân cư · Giao thông', 1: 'Công nghiệp', 2: 'Năng lượng' };
 export const num = (v, digits = 0) => Number(v ?? 0).toLocaleString('vi-VN', {
   minimumFractionDigits: digits, maximumFractionDigits: digits,

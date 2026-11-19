@@ -1,0 +1,96 @@
+/* Phase 2C: city-local layout, preserving global navigation and analytical data. */
+.main-inner:has(.city-explorer) { padding-top: 12px; }
+.city-explorer .page-intro { margin-bottom: 18px; }
+.city-explorer .city-layout { grid-template-columns: clamp(250px, 27%, 340px) minmax(0, 1fr); gap: 20px; }
+.city-explorer .city-search-panel {
+  position: sticky; top: var(--city-header-clearance, 108px); align-self: start;
+  display: flex; flex-direction: column; min-height: 0; max-height: var(--city-search-height, calc(100dvh - var(--city-header-clearance, 108px) - 16px)); padding: 18px;
+}
+.city-explorer .city-search-panel > .panel-heading { margin-bottom: 14px; }
+.city-explorer .city-search-panel > :not(.city-result-list) { flex-shrink: 0; }
+.city-explorer .search-input-wrap { min-height: 44px; }
+.city-explorer .result-count { margin: 12px 0 8px; }
+.city-explorer .city-result-list { flex: 1 1 auto; min-height: 0; max-height: none; overflow-y: auto; scrollbar-gutter: stable; padding-right: 4px; }
+.city-explorer .city-result { min-height: 60px; padding: 11px 8px; }
+.city-explorer .city-result strong { white-space: normal; overflow: visible; overflow-wrap: anywhere; line-height: 1.45; }
+.city-explorer .city-result small { flex-wrap: wrap; font-size: 11px; line-height: 1.5; }
+.city-explorer .city-result.selected { background: var(--surface-selected); box-shadow: inset 3px 0 0 var(--accent); }
+.city-explorer .pagination { padding-top: 12px; }
+.city-explorer .pagination button { min-height: 40px; }
+.city-explorer .city-detail-stack { gap: 18px; }
+.city-explorer .city-hero-panel { padding: 20px; }
+.city-explorer .city-hero { gap: 16px; }
+.city-explorer .city-hero > div { min-width: 0; }
+.city-explorer .city-hero h2 { font-size: clamp(24px, 2.3vw, 30px); line-height: 1.2; overflow-wrap: anywhere; }
+.city-explorer .city-hero p { flex-wrap: wrap; line-height: 1.7; }
+.city-explorer .cluster-chip { max-width: 100%; align-items: center; font-size: 11px; line-height: 1.5; }
+.city-explorer .city-metrics { gap: 12px; margin-top: 18px; grid-auto-rows: 1fr; }
+.city-explorer .city-metrics > div { padding: 12px; }
+.city-explorer .city-metrics .city-metric-label { display: flex; align-items: center; gap: 5px; min-height: 24px; font-size: 11px; }
+.city-explorer .city-metrics strong { font-size: clamp(19px, 1.65vw, 24px); line-height: 1.3; font-variant-numeric: tabular-nums; }
+.city-explorer .city-distance-help { display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; flex: 0 0 24px; padding: 0; border: 0; border-radius: 50%; color: var(--text-secondary); background: transparent; }
+.city-explorer .city-distance-help:hover, .city-explorer .city-distance-help[aria-expanded="true"] { color: var(--accent); background: var(--surface-hover); }
+.city-value-tooltip { position: fixed; z-index: 80; width: max-content; max-width: min(320px, calc(100vw - 24px)); padding: 12px 14px; border: 1px solid var(--control-border); border-radius: 10px; background: var(--surface-elevated); color: var(--text-primary); font-size: 12px; line-height: 1.7; box-shadow: var(--shadow); overflow-wrap: anywhere; }
+.city-explorer .city-difference-summary { margin-top: 10px; padding: 14px; }
+.city-explorer .city-difference-summary > div { min-width: 0; width: 100%; }
+.city-explorer .city-difference-summary h3 { margin: 0 0 8px; color: var(--text-primary); font-size: 12px; }
+.city-explorer .city-difference-summary dl { margin: 0; }
+.city-explorer .city-difference-summary dl > div { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; padding: 5px 0; }
+.city-explorer .city-difference-summary dd { margin: 0; color: var(--text-primary); font-variant-numeric: tabular-nums; text-align: right; }
+.city-explorer .city-difference-summary p { margin: 8px 0 0; }
+.city-explorer .city-emissions-panel > .panel-heading { margin-bottom: 12px; }
+.city-explorer .city-emissions-panel > .panel-heading h2 { margin-bottom: 0; }
+.city-explorer .city-emissions-table { min-width: 640px; }
+.city-explorer .city-emissions-table th, .city-explorer .city-emissions-table td { padding: 13px 10px; line-height: 1.6; }
+.city-explorer .city-emissions-table td { font-variant-numeric: tabular-nums; text-align: right; }
+.city-explorer .city-ghg-value {
+  max-width: 100%; padding: 2px 0; border: 0; background: transparent;
+  color: inherit; line-height: inherit; text-align: right; overflow-wrap: anywhere;
+  text-decoration: underline dotted; text-underline-offset: 3px;
+}
+.city-explorer .city-ghg-value:hover { color: var(--accent-hover); }
+.city-explorer .city-ghg-value:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; border-radius: 2px; }
+.city-explorer .city-distance-grid { grid-auto-rows: 1fr; }
+.city-explorer .city-distance-grid > div { background: var(--surface-inset); }
+.city-explorer .city-distance-grid dt { line-height: 1.6; }
+.city-explorer .city-distance-percentiles { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.city-explorer .city-distance-percentiles dt { min-height: 36px; }
+.city-explorer .city-distance-grid dd { font-variant-numeric: tabular-nums; }
+.city-explorer .city-position-hero { margin-top: 14px; margin-bottom: 12px; padding: 16px; }
+.city-explorer .city-position-hero p + p { margin-top: 8px; }
+.city-explorer .city-extended-statistics > summary { min-height: 44px; padding-block: 8px; }
+.city-explorer .city-extended-content .ce-scope { margin-top: 6px; }
+.city-explorer .city-ai-empty-content { display: flex; flex-direction: column; align-items: center; gap: 14px; padding: 24px 0 8px; text-align: center; }
+.city-explorer .city-ai-document { color: var(--text-secondary); }
+.city-explorer .city-ai-empty-content p { margin: 0; color: var(--text-primary); font-size: 13px; line-height: 1.7; }
+.city-explorer .city-ai-empty-content .button { min-height: 44px; max-width: 100%; white-space: normal; }
+.city-explorer .ce-ai-action { justify-content: flex-end; }
+.city-explorer .ce-report .city-report-name { margin: 0 0 16px; font-size: 16px; font-weight: 650; line-height: 1.5; color: var(--text-primary); overflow-wrap: anywhere; }
+@media(max-width: 1200px) {
+  .city-explorer .city-distance-percentiles { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media(max-width: 900px) {
+  .city-explorer .city-layout { grid-template-columns: 1fr; }
+  .city-explorer .city-search-panel { position: static; max-height: none; }
+  .city-explorer .city-result-list { max-height: 240px; }
+}
+@media(max-width: 630px) {
+  .main-inner:has(.city-explorer) { padding-top: 16px; }
+  .city-explorer .city-search-panel, .city-explorer .city-hero-panel { padding: 16px 14px; }
+  .city-explorer .city-result-list { max-height: 200px; }
+  .city-explorer .pagination button { min-height: 44px; }
+  .city-explorer .city-metrics { gap: 10px; }
+  .city-explorer .city-metrics strong { font-size: 23px; }
+  .city-explorer .city-difference-summary dl > div { flex-wrap: wrap; gap: 2px 10px; }
+  .city-explorer .city-emissions-table { display: table; }
+  .city-explorer .city-emissions-table thead { display: table-header-group; position: static; width: auto; height: auto; overflow: visible; clip-path: none; }
+  .city-explorer .city-emissions-table tbody { display: table-row-group; }
+  .city-explorer .city-emissions-table tr { display: table-row; border: 0; border-radius: 0; margin: 0; }
+  .city-explorer .city-emissions-table th[scope="row"], .city-explorer .city-emissions-table td { display: table-cell; }
+  .city-explorer .city-emissions-table td::before { content: none; }
+  .city-explorer .city-emissions-table td:last-child { border-bottom: 1px solid var(--border); }
+}
+@media print {
+  .city-value-tooltip, .city-explorer .city-distance-help { display: none; }
+  .city-explorer .city-emissions-table { min-width: 0; }
+}

@@ -1,8 +1,10 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Building2, ChevronLeft, ChevronRight, Leaf, MapPin, Search, Sparkles } from 'lucide-react';
+import { Building2, ChevronLeft, ChevronRight, FileText, Leaf, MapPin, Search, Sparkles } from 'lucide-react';
 import { apiGet, apiPost } from '../api.js';
 import { CLUSTER_COLORS, SECTORS, SECTOR_LABELS, ghg, num, pct, topSectors } from '../constants.js';
 import { CitySectorChart } from '../components/SectorCharts.jsx';
+import CentroidDistanceHelp from '../components/CentroidDistanceHelp.jsx';
+import CityGhgValue from '../components/CityGhgValue.jsx';
 import { Empty, ErrorBox, Loading, Note, Panel } from '../components/UI.jsx';
 
 function signedDifference(value) {
@@ -22,6 +24,38 @@ export default function CityExplorer({ selectedCityId, onSelectCity }) {
   const [aiError, setAiError] = useState('');
   const [busy, setBusy] = useState(false);
   const aiRequest = useRef(null);
+  const explorerRef = useRef(null);
+
+  useEffect(() => {
+    const header = document.querySelector('.global-header');
+    const explorer = explorerRef.current;
+    if (!header || !explorer) return;
+    let frame;
+    const updateClearance = () => {
+      const clearance = Math.ceil(header.getBoundingClientRect().height) + 16;
+      const top = Math.max(clearance, explorer.querySelector('.city-layout').getBoundingClientRect().top);
+      explorer.style.setProperty('--city-header-clearance', `${clearance}px`);
+      explorer.style.setProperty('--city-search-height', `${Math.max(0, window.innerHeight - Math.ceil(top) - 16)}px`);
+    };
+    const scheduleUpdate = () => {
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(updateClearance);
+    };
+    updateClearance();
+    const observer = new ResizeObserver(scheduleUpdate);
+    observer.observe(header);
+    observer.observe(explorer.querySelector('.page-intro'));
+    window.addEventListener('scroll', scheduleUpdate, { passive: true });
+    window.addEventListener('resize', scheduleUpdate);
+    explorer.addEventListener('animationend', scheduleUpdate);
+    return () => {
+      observer.disconnect();
+      cancelAnimationFrame(frame);
+      window.removeEventListener('scroll', scheduleUpdate);
+      window.removeEventListener('resize', scheduleUpdate);
+      explorer.removeEventListener('animationend', scheduleUpdate);
+    };
+  }, []);
 
   useEffect(() => { setPage(1); }, [search]);
   useEffect(() => {
@@ -68,8 +102,9 @@ export default function CityExplorer({ selectedCityId, onSelectCity }) {
   const cluster = analysis?.cluster;
   const position = analysis?.position_in_cluster;
   const report = reports[selectedCityId]?.report;
-  return <div className="page-enter city-explorer">
-    <div className="page-intro"><div><h1>City Explorer</h1>
+  const analysisButton = <button className="button button-primary" disabled={busy} onClick={analyze}><Sparkles size={16}/>{busy ? 'Đang phân tích…' : 'Phân tích bằng Gemini'}</button>;
+  return <div className="page-enter city-explorer" ref={explorerRef}>
+    <div className="page-intro"><div><h1>Tra cứu đô thị</h1>
       <p>Tìm đô thị theo tên, xem tỷ trọng 7 lĩnh vực và so sánh với đặc trưng của cụm K-Means.</p></div></div>
     <div className="city-layout">
       <Panel title={<><Search size={20}/> Tìm đô thị</>} subtitle="Chọn đô thị trong danh sách để mở hồ sơ" className="city-search-panel">
@@ -77,9 +112,9 @@ export default function CityExplorer({ selectedCityId, onSelectCity }) {
           onChange={(e) => setSearch(e.target.value)} aria-label="Tìm đô thị"/></div>
         <div className="result-count">{cities ? `${num(cities.total)} đô thị phù hợp` : 'Đang tìm kiếm...'}</div>
         {error && <ErrorBox message={error}/>} 
-        <div className="city-result-list">
+        <div className="city-result-list" role="region" aria-label="Danh sách đô thị phù hợp" tabIndex={0}>
           {cities?.items?.map((city) => <button type="button" key={city.city_id}
-            className={`city-result ${selectedCityId === city.city_id ? 'selected' : ''}`} onClick={() => onSelectCity(city.city_id)}>
+            className={`city-result ${selectedCityId === city.city_id ? 'selected' : ''}`} aria-pressed={selectedCityId === city.city_id} onClick={() => onSelectCity(city.city_id)}>
             <span className="result-cluster" style={{ background: CLUSTER_COLORS[city.cluster_id] }}/>
             <span><strong>{city.city_name}</strong><small><MapPin size={12}/>{city.country_name} · Cụm {city.cluster_id}</small></span>
             <ChevronRight size={17}/>
@@ -103,23 +138,26 @@ export default function CityExplorer({ selectedCityId, onSelectCity }) {
               <span className="cluster-chip" style={{ color: CLUSTER_COLORS[current.cluster_id], borderColor: `${CLUSTER_COLORS[current.cluster_id]}55` }}>
                 <i style={{ background: CLUSTER_COLORS[current.cluster_id] }}/> Cụm {current.cluster_id} · {cluster?.short_name}
               </span></div>
-            <div className="city-metrics"><div><span>Tổng GHG 2024</span><strong>{ghg(current.ghg_total_2024)}</strong><small>Đơn vị gốc EDGAR*</small></div>
-              <div><span>Lĩnh vực lớn nhất</span><strong>{SECTOR_LABELS[topSectors(shares, 1)[0]]}</strong><small>{pct(shares[topSectors(shares, 1)[0]], 2)} trong cơ cấu</small></div>
-              <div><span>Khoảng cách tới tâm cụm</span><strong>{num(analysis.distance_to_centroid, 4)}</strong><small>Euclid · tỷ trọng gốc 0–1</small></div>
+            <div className="city-metrics"><div><span className="city-metric-label">Tổng GHG 2024</span><strong>{ghg(current.ghg_total_2024)}</strong><small>Đơn vị gốc EDGAR*</small></div>
+              <div><span className="city-metric-label">Lĩnh vực lớn nhất</span><strong>{SECTOR_LABELS[topSectors(shares, 1)[0]]}</strong><small>{pct(shares[topSectors(shares, 1)[0]], 2)} trong cơ cấu</small></div>
+              <div><span className="city-metric-label">Khoảng cách đến tâm cụm <CentroidDistanceHelp/></span><strong>{num(analysis.distance_to_centroid, 4)}</strong><small>Euclid · tỷ trọng gốc 0–1</small></div>
             </div>
           </Panel>
-          <Panel title="Đô thị và tâm K-Means" subtitle="So sánh 7 tỷ trọng GHG với tâm mô hình đã lưu">
-            <CitySectorChart shares={shares} clusterCentroid={cluster.centroid_percent}/>
-            <div className="comparison-note"><Leaf size={17}/>
-              <span>Chênh lệch so với tâm nổi bật theo độ lớn: {analysis.notable_differences.map(({ sector, difference_pp: d }) => `${SECTOR_LABELS[sector]} ${signedDifference(d)} điểm phần trăm`).join(' · ')}. Đây là mô tả, không phải kiểm định thống kê.</span>
+          <Panel title="Đô thị và tâm K-Means" subtitle="So sánh 7 tỷ trọng GHG với tâm mô hình">
+            <CitySectorChart shares={shares} clusterCentroid={cluster.centroid_percent} clusterId={current.cluster_id}/>
+            <div className="comparison-note city-difference-summary"><Leaf size={17}/>
+              <div><h3>Chênh lệch nổi bật so với tâm cụm</h3>
+                <dl>{analysis.notable_differences.map(({ sector, difference_pp: d }) => <div key={sector}><dt>{SECTOR_LABELS[sector]}</dt><dd>{signedDifference(d)} điểm phần trăm</dd></div>)}</dl>
+                <p>Đây là mô tả, không phải kiểm định thống kê.</p>
+              </div>
             </div>
           </Panel>
-          <Panel title="Phát thải và cơ cấu 7 lĩnh vực" subtitle="GHG giữ nguyên đơn vị gốc EDGAR · Tỷ trọng: % · Chênh lệch: điểm phần trăm">
-            <div className="ce-table-scroll"><table className="ce-table city-emissions-table">
-              <thead><tr>{['Lĩnh vực', 'GHG 2024', 'Đô thị (%)', 'Tâm (%)', 'Chênh lệch với tâm'].map((label) => <th key={label} scope="col">{label}</th>)}</tr></thead>
+          <Panel title="Phát thải và cơ cấu 7 lĩnh vực" className="city-emissions-panel">
+            <div className="ce-table-scroll" role="region" aria-label="Bảng phát thải và cơ cấu 7 lĩnh vực" tabIndex={0}><table className="ce-table city-emissions-table">
+              <thead><tr>{['Lĩnh vực', 'GHG (tấn/năm)', 'Đô thị (%)', 'Tâm (%)', 'Chênh lệch với tâm'].map((label) => <th key={label} scope="col">{label}</th>)}</tr></thead>
               <tbody>{SECTORS.map((s) => <tr key={s} className={analysis.notable_differences.some((d) => d.sector === s) ? 'city-notable-row' : ''}>
                 <th scope="row">{SECTOR_LABELS[s]}</th>
-                <td data-label="GHG 2024"><span>{num(analysis.emissions_by_sector[s], 2)}</span></td>
+                <td><CityGhgValue value={analysis.emissions_by_sector?.[s]} sector={SECTOR_LABELS[s]}/></td>
                 <td data-label="Tỷ trọng đô thị"><span>{pct(shares[s], 2)}</span></td>
                 <td data-label="Tỷ trọng tâm"><span>{pct(cluster.centroid_percent[s], 2)}</span></td>
                 <td data-label="Chênh lệch với tâm" className="city-difference-cell"><span><strong>{signedDifference(analysis.comparison_to_centroid_pp[s])}</strong><span className="city-difference-unit">điểm phần trăm</span></span></td>
@@ -137,23 +175,26 @@ export default function CityExplorer({ selectedCityId, onSelectCity }) {
           </Panel>
           <details className="panel city-extended-statistics"><summary>Xem thống kê mở rộng của cụm</summary><div className="city-extended-content">
             <h3>Các mốc khoảng cách bổ sung</h3>
-            <dl className="city-distance-grid">{[['q1', 'Q1 cụm'], ['q3', 'Q3 cụm'], ['p90', 'P90 cụm'], ['p95', 'P95 cụm']].map(([key, label]) => <div key={key}><dt>{label}</dt><dd>{num(cluster.distance_statistics[key], 4)}</dd></div>)}</dl>
+            <p className="ce-scope">Các mốc phân vị mô tả phân bố khoảng cách từ các đô thị trong cùng cụm tới tâm K-Means.</p>
+            <dl className="city-distance-grid city-distance-percentiles">{[['q1', 'Tứ phân vị thứ nhất (Q1)'], ['q3', 'Tứ phân vị thứ ba (Q3)'], ['p90', 'Phân vị thứ 90 (P90)'], ['p95', 'Phân vị thứ 95 (P95)']].map(([key, label]) => <div key={key}><dt>{label}</dt><dd>{num(cluster.distance_statistics[key], 4)}</dd></div>)}</dl>
             <h3>Thống kê lĩnh vực trong cụm</h3><p className="ce-scope">Trung bình/trung vị: % · Độ lệch chuẩn tổng thể/IQR: điểm phần trăm</p>
             <div className="ce-table-scroll"><table className="ce-table city-cluster-table"><thead><tr>{['Lĩnh vực', 'Trung bình', 'Trung vị', 'Độ lệch chuẩn', 'IQR'].map((label) => <th key={label} scope="col">{label}</th>)}</tr></thead>
               <tbody>{SECTORS.map((s) => <tr key={s}><th scope="row">{SECTOR_LABELS[s]}</th>{['mean', 'median', 'std', 'iqr'].map((key) => <td key={key}>{num(cluster.sector_statistics_percent[s][key], 2)}</td>)}</tr>)}</tbody>
             </table></div><Note>Tâm lấy từ mô hình; trung bình và trung vị tính từ các thành viên. Hai giá trị tâm và trung bình có thể lệch nhẹ.</Note>
           </div></details>
-          <Panel title={<><Sparkles size={20}/> Phân tích hồ sơ đô thị bằng Gemini</>} subtitle="Báo cáo 250–400 từ, tập trung diễn giải cơ cấu và mức độ tương đồng với cụm">
-            <div className="ce-ai-action"><p>Dữ liệu được Python kiểm tra và làm tròn trước khi gửi.</p><button className="button button-primary" disabled={busy} onClick={analyze}><Sparkles size={16}/>{busy ? 'Đang phân tích…' : 'Phân tích bằng Gemini'}</button></div>
+          <Panel title={<><Sparkles size={20}/> Phân tích hồ sơ đô thị bằng Gemini</>} subtitle="Tập trung diễn giải cơ cấu và mức độ tương đồng với cụm">
+            {report ? <div className="ce-ai-action">{analysisButton}</div> : <div className="city-ai-empty-content"><FileText size={28} className="city-ai-document" aria-hidden="true"/>
+              <p>Chưa có báo cáo cho đô thị đang chọn.</p>{analysisButton}
+            </div>}
             {busy && <Loading text={`Gemini đang phân tích ${current.city_name}…`}/>}
             {aiError && <ErrorBox message={aiError}/>}
             <div aria-live="polite">{report ? <article className="ce-report">
-              <p className="ce-scope">{current.city_name} · {reports[selectedCityId].model} · Nội dung AI cần đối chiếu thống kê</p>
+              <h3 className="city-report-name">{current.city_name}</h3>
               <h3>Cơ cấu phát thải nổi bật</h3><p>{report.summary}</p>
               <h3>So sánh với đặc trưng cụm</h3><ul>{report.comparisons.map((text, i) => <li key={i}>{text}</li>)}</ul>
               <h3>Mức độ điển hình và tính đại diện</h3><p>{report.dispersion_and_representativeness}</p>
               <h3>Hạn chế và hướng nghiên cứu</h3><ul>{report.limitations.map((text, i) => <li key={`l-${i}`}>{text}</li>)}</ul><ul>{report.research_questions.map((text, i) => <li key={`q-${i}`}>{text}</li>)}</ul>
-            </article> : !busy && <p className="ce-scope">Chưa phân tích đô thị này. Nhấn nút để tạo báo cáo Gemini từ dữ liệu đang hiển thị.</p>}</div>
+            </article> : null}</div>
           </Panel>
           <Note>*Đơn vị phát thải được giữ nguyên từ EDGAR. Các tỷ trọng không cho biết nhu cầu mua hay tính khả thi triển khai công nghệ.</Note>
         </>}

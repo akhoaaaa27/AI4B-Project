@@ -2,6 +2,9 @@ import React from 'react';
 import { createRoot } from 'react-dom/client';
 import 'leaflet/dist/leaflet.css';
 import './styles.css';
+import './navigation.css';
+import './overview.css';
+import './city-explorer.css';
 import App from './App.jsx';
 
 createRoot(document.getElementById('root')).render(
