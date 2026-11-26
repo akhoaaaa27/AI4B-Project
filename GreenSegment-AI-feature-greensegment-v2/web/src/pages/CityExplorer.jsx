@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Building2, ChevronLeft, ChevronRight, FileText, Leaf, MapPin, Search, Sparkles } from 'lucide-react';
+import { Building2, ChevronLeft, ChevronRight, FileText, MapPin, Search, Sparkles } from 'lucide-react';
 import { apiGet, apiPost } from '../api.js';
 import { CLUSTER_COLORS, SECTORS, SECTOR_LABELS, ghg, num, pct, topSectors } from '../constants.js';
 import { CitySectorChart } from '../components/SectorCharts.jsx';
@@ -145,12 +145,6 @@ export default function CityExplorer({ selectedCityId, onSelectCity }) {
           </Panel>
           <Panel title="Đô thị và tâm K-Means" subtitle="So sánh 7 tỷ trọng GHG với tâm mô hình">
             <CitySectorChart shares={shares} clusterCentroid={cluster.centroid_percent} clusterId={current.cluster_id}/>
-            <div className="comparison-note city-difference-summary"><Leaf size={17}/>
-              <div><h3>Chênh lệch nổi bật so với tâm cụm</h3>
-                <dl>{analysis.notable_differences.map(({ sector, difference_pp: d }) => <div key={sector}><dt>{SECTOR_LABELS[sector]}</dt><dd>{signedDifference(d)} điểm phần trăm</dd></div>)}</dl>
-                <p>Đây là mô tả, không phải kiểm định thống kê.</p>
-              </div>
-            </div>
           </Panel>
           <Panel title="Phát thải và cơ cấu 7 lĩnh vực" className="city-emissions-panel">
             <div className="ce-table-scroll" role="region" aria-label="Bảng phát thải và cơ cấu 7 lĩnh vực" tabIndex={0}><table className="ce-table city-emissions-table">

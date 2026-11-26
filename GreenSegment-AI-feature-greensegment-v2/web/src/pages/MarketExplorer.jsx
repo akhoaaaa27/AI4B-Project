@@ -220,11 +220,15 @@ export default function MarketExplorer({ countries, onSelectCity }) {
         {busy.parse && <Loading text="Gemini đang chuyển yêu cầu thành bộ lọc…"/>}
         {errors.parse && <ErrorBox message={errors.parse}/>}
         {parsed?.unsupported_criteria.length > 0 && <ErrorBox message={`Chưa thể tìm kiếm. Điều kiện chưa hỗ trợ: ${parsed.unsupported_criteria.map((item) => item.trim().replace(/[.!?]+$/u, '')).join('; ')}. Hãy chỉnh sửa yêu cầu rồi tìm kiếm lại.`}/>}
-      </Panel> : <Panel title={<><Search size={20}/> Tìm kiếm theo bộ lọc</>} subtitle="Truy vấn trực tiếp bằng Python, không gọi Gemini khi tìm kiếm">
+      </Panel> : <Panel title={<><Search size={20}/> Tìm kiếm theo bộ lọc</>}>
         <form onSubmit={manualSearch}>
           <fieldset disabled={pending} className="market-fields">
-            <div className="market-country-field"><label htmlFor="market-countries">Quốc gia / vùng lãnh thổ (chọn nhiều)</label><select id="market-countries" multiple size={5} value={draft.countries} onChange={(e) => edit('countries', Array.from(e.target.selectedOptions, (option) => option.value))}>{countries.map((c) => <option key={c.name} value={c.name}>{c.name}</option>)}</select>
-              <button type="button" className="market-text-button" onClick={() => edit('countries', [])}>Chọn toàn bộ quốc gia</button><small>Không chọn riêng quốc gia nào = toàn bộ dữ liệu. Ctrl/Cmd + nhấn để chọn nhiều trên desktop.</small></div>
+            <div className="market-country-field">
+              <label htmlFor="market-countries">Quốc gia / vùng lãnh thổ</label>
+              <select id="market-countries" multiple size={5} value={draft.countries} onChange={(e) => edit('countries', Array.from(e.target.selectedOptions, (option) => option.value))}>
+                {countries.map((c) => <option key={c.name} value={c.name}>{c.name}</option>)}
+              </select>
+            </div>
             <label>Lĩnh vực GHG<select id="market-sector" value={draft.sector} onChange={(e) => edit('sector', e.target.value)}><option value="all">Tất cả lĩnh vực</option>{SECTORS.map((s) => <option key={s} value={s}>{SECTOR_LABELS[s]}</option>)}</select></label>
             <label>Tỷ trọng phát thải tối thiểu (%)<input id="market-min" type="number" min="0" max="100" step="any" disabled={draft.sector === 'all'} value={draft.min_sector_share_percent ?? ''} placeholder="Không giới hạn" onChange={(e) => edit('min_sector_share_percent', e.target.value === '' ? null : Number(e.target.value))}/></label>
             <label>Cụm K-Means<select id="market-cluster" value={draft.cluster_id ?? ''} onChange={(e) => edit('cluster_id', e.target.value === '' ? null : Number(e.target.value))}><option value="">Tất cả cụm</option>{[0, 1, 2].map((id) => <option key={id} value={id}>Cụm {id}</option>)}</select></label>
@@ -285,9 +289,19 @@ export default function MarketExplorer({ countries, onSelectCity }) {
               {reportButton}
             </div>}
           {busy.report && <Loading text="Gemini đang tổng hợp dữ liệu nghiên cứu…"/>}{errors.report && <ErrorBox message={errors.report}/>}
-          <div aria-live="polite">{report ? <article className="ce-report"><p className="ce-scope">{report.model} · Nội dung AI cần đối chiếu số liệu và nghiên cứu bổ sung</p>
-            {report.verified_facts && <><h3>Số liệu Python đã kiểm chứng</h3><div className="ce-table-scroll"><table className="ce-table market-report-facts"><thead><tr><th scope="col">Phạm vi</th><th scope="col">Đô thị</th><th scope="col">Quốc gia</th><th scope="col">Tỷ trọng TB</th>{[0, 1, 2].map((id) => <th key={id} scope="col">Cụm {id}</th>)}</tr></thead>
-              <tbody>{[['matching', 'Toàn bộ tập phù hợp'], ['top', 'Top N hiển thị']].map(([scope, label]) => <tr key={scope}><th scope="row">{label}</th><td>{reportFact(`${scope}.city_count`)}</td><td>{reportFact(`${scope}.country_count`)}</td><td>{reportFact(`${scope}.mean_sector_share_percent`)}</td>{[0, 1, 2].map((id) => <td key={id}>{reportFact(`${scope}.clusters.${id}.city_count`)} ({reportFact(`${scope}.clusters.${id}.city_percentage`)})</td>)}</tr>)}</tbody></table></div><p className="ce-scope">Các số trong bảng được Python gắn trực tiếp từ dữ liệu EDGAR {reportFact('dataset.year')}, không do Gemini tự chép lại.</p></>}
+          <div aria-live="polite">{report ? <article className="ce-report">
+            {report.verified_facts && <div className="ce-table-scroll" role="region" aria-label="Thống kê toàn bộ tập phù hợp và Top N" tabIndex={0}>
+              <table className="ce-table market-report-facts">
+                <thead><tr><th scope="col">Phạm vi</th><th scope="col">Đô thị</th><th scope="col">Quốc gia</th><th scope="col">Tỷ trọng TB</th>{[0, 1, 2].map((id) => <th key={id} scope="col">Cụm {id}</th>)}</tr></thead>
+                <tbody>{[['matching', 'Toàn bộ tập phù hợp'], ['top', 'Top N hiển thị']].map(([scope, label]) => <tr key={scope}>
+                  <th scope="row">{label}</th>
+                  <td>{reportFact(`${scope}.city_count`)}</td>
+                  <td>{reportFact(`${scope}.country_count`)}</td>
+                  <td>{reportFact(`${scope}.mean_sector_share_percent`)}</td>
+                  {[0, 1, 2].map((id) => <td key={id}>{reportFact(`${scope}.clusters.${id}.city_count`)} ({reportFact(`${scope}.clusters.${id}.city_percentage`)})</td>)}
+                </tr>)}</tbody>
+              </table>
+            </div>}
             <h3>Yêu cầu và phạm vi nghiên cứu</h3><p>{report.report.research_request}</p><h3>Đặc điểm phát thải</h3><p>{report.report.emissions_profile}</p><h3>Phân bố theo cụm</h3><p>{report.report.cluster_distribution}</p>
             <h3>Một số đô thị trong Top N</h3>{report.report.city_comparisons.map((city, i) => { const source = report.representative_cities.find((c) => c.city_id === city.city_id); return <div key={i}><strong>{source?.city_name} · {source?.country_name}</strong>{report.verified_facts && <p className="ce-scope">Thứ hạng {reportFact(`cities.${city.city_id}.rank`)} · Cụm {reportFact(`cities.${city.city_id}.cluster_id`)} · Tỷ trọng {reportFact(`cities.${city.city_id}.sector_share_percent`)} · Chênh lệch với trung bình toàn bộ tập phù hợp: {reportFact(`cities.${city.city_id}.share_gap_matching_pp`)}</p>}<p>{city.text}</p></div>; })}
             <h3>Liên hệ công nghệ sơ bộ</h3><p>{report.report.preliminary_technology_link}</p><h3>Thông tin cần bổ sung</h3><ul>{report.report.additional_information.map((v, i) => <li key={i}>{v}</li>)}</ul><h3>Giới hạn kết luận</h3><p>{report.report.limitations}</p>

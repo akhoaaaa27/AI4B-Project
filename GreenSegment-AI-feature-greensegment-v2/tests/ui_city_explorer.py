@@ -162,12 +162,11 @@ class CityExplorerBrowserTests(unittest.TestCase):
                     self.assertEqual(cells.nth(1).inner_text(), self.number(analysis['shares_percent'][sector], 2) + '%')
                     self.assertEqual(cells.nth(2).inner_text(), self.number(analysis['cluster']['centroid_percent'][sector], 2) + '%')
                     expect(cells.nth(3).locator('strong')).to_have_text(self.signed(analysis['comparison_to_centroid_pp'][sector]))
-                difference_rows = self.page.locator('.city-difference-summary dl > div')
-                expect(difference_rows).to_have_count(len(analysis['notable_differences']))
-                for i, item in enumerate(analysis['notable_differences']):
-                    expect(difference_rows.nth(i).locator('dt')).to_have_text(data.SECTOR_LABELS[item['sector']])
-                    expect(difference_rows.nth(i).locator('dd')).to_have_text(self.signed(item['difference_pp']) + ' điểm phần trăm')
-                expect(self.page.locator('.city-difference-summary')).to_contain_text('Đây là mô tả, không phải kiểm định thống kê.')
+                expect(self.page.locator('.city-difference-summary')).to_have_count(0)
+                notable_sectors = {item['sector'] for item in analysis['notable_differences']}
+                expect(self.page.locator('.city-notable-row th')).to_have_text(
+                    [data.SECTOR_LABELS[sector] for sector in data.SECTORS if sector in notable_sectors]
+                )
                 self.page.evaluate('scrollTo(0,0)')
                 self.page.screenshot(path=str(OUT / f'cluster-{cid}.png'), full_page=True)
         self.assertEqual(self.ai_calls, [])
